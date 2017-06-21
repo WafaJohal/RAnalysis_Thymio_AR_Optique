@@ -1,0 +1,83 @@
+---
+title: "Thymio AR Optique"
+output: html_notebook
+---
+
+This sheet presents results of the experiment conducted with two classrooms and aiming to show the effect in terms of learning outcome of the use of augmented reality in a task where learners had to understand basic optic principles related to IR sensors of Thymio.
+
+The source code of this analysis is online here : [https://github.com/WafaJohal/RAnalysis_Thymio_AR_Optique.git]
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(plotly)
+library(plyr)
+library(ggplot2)
+library("ggthemes")
+library("scales")
+#library(RQDA)
+
+library(png)
+library(grid)
+library(reshape2)
+library(readr)
+```
+```{r, echo=FALSE, message=FALSE, include=FALSE}
+AR_results <- read_csv("~/Documents/CODING/DATA_ANALYSIS/Thymio_AR/AR_results.csv", 
+    col_types = cols(condition = col_factor(levels = c("WO_AR", "AR")), date = col_datetime(format = "%d/%m/%y"), teacher = col_factor(levels = c("FM","OR"))))
+source("util.R")
+attach(AR_results)
+```
+
+##Are the group balanced?
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+summ_freq = summarySE(AR_results, measurevar="average_grade", groupvars=c("group_id","condition"))
+summ_freq[is.na(summ_freq)] <- 0
+p = ggplot(summ_freq, aes(x=group_id, y=average_grade, fill=condition, group=1)) +
+    geom_errorbar(aes(ymin=average_grade-sd, ymax=average_grade+sd), width=.1) +
+    geom_bar(stat="identity") +theme_Publication()
+p
+```
+
+
+
+### Evolution of scores for each concept and for the two conditions
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(plyr)
+AR_results <- melt(AR_results, measure.vars=c("C11","C12","C13", "C21","C22","C23","C31","C32","C33","C41","C42","C43"))
+names(AR_results)[names(AR_results)=="variable"] <- "Concept"
+names(AR_results)[names(AR_results)=="value"] <- "C_Score"
+
+
+
+tmp_s1 = subset.data.frame(AR_results, (AR_results$Concept == "C11" | AR_results$Concept =="C21" |
+              AR_results$Concept == "C41" | AR_results$Concept == "C31"))
+tmp_s1$Session = "1"
+tmp_s2 = subset.data.frame(AR_results, (AR_results$Concept == "C12" | AR_results$Concept =="C22" |
+              AR_results$Concept == "C42" | AR_results$Concept == "C32"))
+tmp_s2$Session = "2"
+tmp_s3 = subset.data.frame(AR_results, (AR_results$Concept == "C13" | AR_results$Concept =="C23" |
+              AR_results$Concept == "C43" | AR_results$Concept == "C33"))
+tmp_s3$Session = "3"
+
+AR_results =  rbind(tmp_s1, rbind(tmp_s2,tmp_s3))
+
+tmp_c1 = subset.data.frame(AR_results, (AR_results$Concept == "C12" | AR_results$Concept =="C11" | AR_results$Concept == "C13"))
+tmp_c1$concept_id = "C1"
+tmp_c2 = subset.data.frame(AR_results, (AR_results$Concept == "C22" | AR_results$Concept =="C21" | AR_results$Concept == "C23"))
+tmp_c2$concept_id = "C2"
+tmp_c3 = subset.data.frame(AR_results, (AR_results$Concept == "C32" | AR_results$Concept =="C31" | AR_results$Concept == "C33"))
+tmp_c3$concept_id = "C3"
+tmp_c4 = subset.data.frame(AR_results, (AR_results$Concept == "C42" | AR_results$Concept =="C41" | AR_results$Concept == "C43"))
+tmp_c4$concept_id = "C4"
+
+AR_results =  rbind(tmp_c1, rbind(tmp_c2,rbind(tmp_c3,tmp_c4)))
+
+summ_freq = summarySE(AR_results, measurevar="C_Score", groupvars=c("concept_id","condition","Session"))
+summ_freq[is.na(summ_freq)] <- 0
+attach(summ_freq)
+p = ggplot(summ_freq, aes(x=Session, y=C_Score, fill=condition, group = factor(condition))) +
+    geom_errorbar(aes(ymin=C_Score-sd, ymax=C_Score+sd), width=.1) +
+    geom_bar(stat="identity",position = position_dodge(width = 0.9)) +theme_Publication() + facet_wrap(~concept_id)
+p
+```
+
+
