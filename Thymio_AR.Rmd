@@ -1,6 +1,8 @@
 ---
 title: "Thymio AR Optique"
-output: html_notebook
+output:
+  html_notebook: default
+  html_document: default
 ---
 
 This sheet presents results of the experiment conducted with two classrooms and aiming to show the effect in terms of learning outcome of the use of augmented reality in a task where learners had to understand basic optic principles related to IR sensors of Thymio.
@@ -33,13 +35,14 @@ summ_freq = summarySE(AR_results, measurevar="average_grade", groupvars=c("group
 summ_freq[is.na(summ_freq)] <- 0
 p = ggplot(summ_freq, aes(x=group_id, y=average_grade, fill=condition, group=1)) +
     geom_errorbar(aes(ymin=average_grade-sd, ymax=average_grade+sd), width=.1) +
-    geom_bar(stat="identity") +theme_Publication()
-p
+    geom_bar(stat="identity") +theme_Publication()+  scale_fill_activities_Publication() 
+ggplotly(p)
 ```
 
 
 
 ### Evolution of scores for each concept and for the two conditions
+In average across all the sessions
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(plyr)
 AR_results <- melt(AR_results, measure.vars=c("C11","C12","C13", "C21","C22","C23","C31","C32","C33","C41","C42","C43"))
@@ -71,13 +74,40 @@ tmp_c4$concept_id = "C4"
 
 AR_results =  rbind(tmp_c1, rbind(tmp_c2,rbind(tmp_c3,tmp_c4)))
 
+summ_freq = summarySE(AR_results, measurevar="C_Score", groupvars=c("concept_id","condition"))
+summ_freq[is.na(summ_freq)] <- 0
+attach(summ_freq)
+p = ggplot(summ_freq, aes(x=condition, y=C_Score, fill=condition, group = factor(condition))) +
+    geom_errorbar(aes(ymin=C_Score-sd, ymax=C_Score+sd), width=.1) +
+    geom_bar(stat="identity",position = position_dodge(width = 0.9)) +theme_Publication() + facet_wrap(~concept_id)+ylim(0,1)+
+   scale_fill_activities_Publication() 
+ggplotly(p)
+print(summ_freq)
+```
+For each session
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 summ_freq = summarySE(AR_results, measurevar="C_Score", groupvars=c("concept_id","condition","Session"))
 summ_freq[is.na(summ_freq)] <- 0
 attach(summ_freq)
 p = ggplot(summ_freq, aes(x=Session, y=C_Score, fill=condition, group = factor(condition))) +
     geom_errorbar(aes(ymin=C_Score-sd, ymax=C_Score+sd), width=.1) +
-    geom_bar(stat="identity",position = position_dodge(width = 0.9)) +theme_Publication() + facet_wrap(~concept_id)
-p
+    geom_bar(stat="identity",position = position_dodge(width = 0.9)) +theme_Publication() + facet_wrap(~concept_id)+ylim(0,1)+
+   scale_fill_activities_Publication() 
+ggplotly(p)
+print(summ_freq)
+attach(AR_results)
+```
+
+
+## Statistical test of significance
+Is AR significantly different than WO_AR for the concept considered?
+```{r}
+
+summary(aov(C_Score ~ condition))
+summary(aov(C_Score ~ Session))
+summary(aov(C_Score ~ concept_id))
+summary(aov(C_Score ~ group_id))
+summary(aov(C_Score ~ condition*Session*concept_id))
 ```
 
 
