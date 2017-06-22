@@ -9,6 +9,9 @@ This sheet presents results of the experiment conducted with two classrooms and 
 
 The source code of this analysis is online here : [https://github.com/WafaJohal/RAnalysis_Thymio_AR_Optique.git]
 
+The results can be see rendered here : 
+[http://rpubs.com/wafajohal/286557]
+
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
 library(plotly)
 library(plyr)
